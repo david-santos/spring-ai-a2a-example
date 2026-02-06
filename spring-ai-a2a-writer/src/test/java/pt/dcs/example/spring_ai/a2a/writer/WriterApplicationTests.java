@@ -1,10 +1,10 @@
-package pt.dcs.example.spring_ai.mcp_weather_client;
+package pt.dcs.example.spring_ai.a2a.writer;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 //@SpringBootTest
-class McpWeatherClientApplicationTests {
+class WriterApplicationTests {
 
 	@Test
 	void contextLoads() {

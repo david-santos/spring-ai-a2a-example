@@ -1,4 +1,4 @@
-package pt.dcs.example.spring_ai.mcp_weather_client;
+package pt.dcs.example.spring_ai.a2a.editor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,9 +13,9 @@ import java.util.Map;
 import java.util.Random;
 
 @SpringBootApplication
-public class McpWeatherClientApplication {
+public class EditorApplication {
 
-	private final Logger logger = LoggerFactory.getLogger(McpWeatherClientApplication.class);
+	private final Logger logger = LoggerFactory.getLogger(EditorApplication.class);
 
 	private static final String USER_PROMPT = """
 			Check the weather in Oeiras (Portugal) now and show the creative response!
@@ -26,7 +26,7 @@ public class McpWeatherClientApplication {
 			""";
 
 	public static void main(String[] args) {
-		SpringApplication.run(McpWeatherClientApplication.class, args).close(); // The application starts, executes the weather query, displays the result, and then exits cleanly.
+		SpringApplication.run(EditorApplication.class, args).close(); // The application starts, executes the weather query, displays the result, and then exits cleanly.
 	}
 
 	@Bean

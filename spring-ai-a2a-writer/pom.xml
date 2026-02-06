@@ -12,7 +12,7 @@
 
 	<artifactId>spring-ai-a2a-writer</artifactId>
 	<name>spring-ai-a2a-writer</name>
-	<description></description>
+	<description>AI agent responsible for generating a piece of content containing PII, given a content outline</description>
 
 	<dependencies>
 		<dependency>

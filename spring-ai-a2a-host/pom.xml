@@ -12,13 +12,9 @@
 
 	<artifactId>spring-ai-a2a-host</artifactId>
 	<name>spring-ai-a2a-host</name>
-	<description></description>
+	<description>AI agent responsible for interacting with a human user and orchestrating other agents</description>
 
 	<dependencies>
-		<dependency>
-			<groupId>org.springframework.ai</groupId>
-			<artifactId>spring-ai-starter-mcp-client</artifactId>
-		</dependency>
 		<dependency>
 			<groupId>org.springframework.ai</groupId>
 			<artifactId>spring-ai-starter-model-ollama</artifactId>

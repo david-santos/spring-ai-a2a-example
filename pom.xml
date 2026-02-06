@@ -15,7 +15,7 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>spring-ai-a2a-example</name>
-	<description></description>
+	<description>This project demonstrates a simple Spring AI integration for building AI agent servers using the A2A Protocol</description>
 
 	<properties>
 		<java.version>25</java.version>
