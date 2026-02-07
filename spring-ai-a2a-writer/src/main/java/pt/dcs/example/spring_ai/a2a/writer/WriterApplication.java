@@ -1,49 +1,75 @@
 package pt.dcs.example.spring_ai.a2a.writer;
 
+import io.a2a.server.agentexecution.AgentExecutor;
+import io.a2a.spec.AgentCapabilities;
+import io.a2a.spec.AgentCard;
+import io.a2a.spec.AgentSkill;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springaicommunity.a2a.server.executor.DefaultAgentExecutor;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.tool.ToolCallbackProvider;
-import org.springframework.boot.CommandLineRunner;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.io.Resource;
 
-import java.util.Map;
-import java.util.Random;
+import java.util.List;
 
 @SpringBootApplication
 public class WriterApplication {
 
-	private final Logger logger = LoggerFactory.getLogger(WriterApplication.class);
+    private final Logger logger = LoggerFactory.getLogger(WriterApplication.class);
 
-	private static final String USER_PROMPT = """
-			Check the weather in Oeiras (Portugal) now and show the creative response!
-			Please incorporate all creative responses from all LLM providers.
+    @Value("classpath:/system-prompt-template.st")
+    private Resource systemPromptTemplate;
 
-			Please use the weather poem (returned from the tool) to find a publisher online.
-			List the top 3 most relevant publishers for this poem.
-			""";
+    public static void main(String[] args) {
+        SpringApplication.run(WriterApplication.class, args);
+    }
 
-	public static void main(String[] args) {
-		SpringApplication.run(WriterApplication.class, args).close(); // The application starts, executes the weather query, displays the result, and then exits cleanly.
-	}
+    @Bean
+    public AgentCard agentCard(@Value("${server.port:8080}") int port,
+                               @Value("${server.servlet.context-path:}") String contextPath) {
+        // This AgentCard is automatically exposed at /.well-known/agent-card.json
+        // Other agents discover this agent's capabilities through this endpoint
+        return new AgentCard.Builder()
+                .name("Content Writer Agent")
+                .description("An agent that can write a comprehensive and engaging piece of content based on the provided outline and high-level description of the content")
+                .url("http://localhost:" + port + contextPath + "/")
+                .version("1.0.0")
+                .documentationUrl("http://localhost:" + port + "/docs")
+                .capabilities(
+                        new AgentCapabilities.Builder()
+                                .streaming(false)
+                                .pushNotifications(false)
+                                .stateTransitionHistory(false)
+                                .build())
+                .defaultInputModes(List.of("text"))
+                .defaultOutputModes(List.of("text"))
+                .skills(List.of(new AgentSkill.Builder()
+                        .id("writer")
+                        .name("Writes content using an outline")
+                        .description("Writes content using a given outline and high-level description of the content")
+                        .tags(List.of("writer"))
+                        .examples(List.of("Write a short, upbeat, and encouraging twitter post about learning Java. Base your writing on the given outline."))
+                        .build()))
+                .protocolVersion("0.3.3")
+                .build();
+    }
 
-	@Bean
-	public ChatClient chatClient(ChatClient.Builder chatClientBuilder) {
-		// Creates a configured ChatClient bean using Spring AI's auto-configured builder.
-		// The builder is automatically populated with default settings and configurations from application.properties.
-		return chatClientBuilder.build();
-	}
+    @Bean
+    public AgentExecutor agentExecutor(ChatClient.Builder chatClientBuilder) {
 
-	@Bean
-	public CommandLineRunner predefinedQuestions(ChatClient chatClient, ToolCallbackProvider mcpToolProvider) {
-		// Runs automatically after the application context is fully loaded. It injects the configured ChatClient for AI model interaction and the ToolCallbackProvider which contains all registered MCP tools from connected servers.
-		return args -> logger.info(chatClient.prompt(USER_PROMPT) // Instructs the AI model to get Oeiras's current weather. The AI model automatically discovers and calls the appropriate MCP tools based on the prompt.
-				.toolContext(Map.of("progressToken", "token-" + new Random().nextInt())) // Uses the toolContext to pass a unique progressToken to MCP tools annotated with @McpProgressToken parameter.
-				.toolCallbacks(mcpToolProvider) // This crucial line connects the ChatClient to all available MCP tools. mcpToolProvider is auto-configured by Spring AI's MCP Client starter.
-				.call()                         // Contains all tools from connected MCP servers (configured via spring.ai.mcp.client.*.connections.*).
-				.content());                    // The AI model can automatically discover and invoke these tools during conversation.
-	}
+        ChatClient chatClient = chatClientBuilder
+                .defaultSystem(promptSystemSpec -> promptSystemSpec
+                        .text(systemPromptTemplate))
+                .defaultAdvisors(new MyLoggingAdvisor(10))
+                .build();
 
+        return new DefaultAgentExecutor(chatClient, (chat, requestContext) -> {
+            String userMessage = DefaultAgentExecutor.extractTextFromMessage(requestContext.getMessage());
+            return chat.prompt().user(userMessage).call().content();
+        });
+    }
 }
